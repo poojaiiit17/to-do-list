@@ -1,52 +1,36 @@
 package com.pooja.todo;
 
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class TaskService {
-    private final List<Task> tasks = new ArrayList<>();
-    private final AtomicInteger nextId = new AtomicInteger(1);
+    private final TaskDAO taskDAO = new TaskDAO();
 
-    public synchronized List<Task> getAllTasks() {
-        return new ArrayList<>(tasks);
+    public List<Task> getAllTasks() throws SQLException {
+        return taskDAO.getAllTasks();
     }
 
-    public synchronized Task addTask(String title, String description) {
+    public Task addTask(String title, String description) throws SQLException {
+        validateTitle(title);
+        return taskDAO.addTask(title.trim(), description == null ? "" : description.trim());
+    }
+
+    public Task updateTask(int id, String title, String description, boolean completed) throws SQLException {
+        validateTitle(title);
+        return taskDAO.updateTask(id, title.trim(), description == null ? "" : description.trim(), completed);
+    }
+
+    public Task toggleTask(int id) throws SQLException {
+        return taskDAO.toggleTask(id);
+    }
+
+    public void deleteTask(int id) throws SQLException {
+        taskDAO.deleteTask(id);
+    }
+
+    private void validateTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
             throw new IllegalArgumentException("Task title is required");
         }
-        Task task = new Task(nextId.getAndIncrement(), title.trim(),
-                description == null ? "" : description.trim(), false);
-        tasks.add(task);
-        return task;
-    }
-
-    public synchronized Task updateTask(int id, String title, String description, boolean completed) {
-        Task task = findById(id);
-        if (title == null || title.trim().isEmpty()) {
-            throw new IllegalArgumentException("Task title is required");
-        }
-        task.setTitle(title.trim());
-        task.setDescription(description == null ? "" : description.trim());
-        task.setCompleted(completed);
-        return task;
-    }
-
-    public synchronized Task toggleTask(int id) {
-        Task task = findById(id);
-        task.setCompleted(!task.isCompleted());
-        return task;
-    }
-
-    public synchronized void deleteTask(int id) {
-        tasks.remove(findById(id));
-    }
-
-    private Task findById(int id) {
-        return tasks.stream()
-                .filter(task -> task.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
     }
 }
