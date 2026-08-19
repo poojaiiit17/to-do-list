@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
@@ -71,6 +72,9 @@ public class Main {
             sendJson(exchange, 404, Map.of("error", "Endpoint not found"));
         } catch (IllegalArgumentException e) {
             sendJson(exchange, 400, Map.of("error", e.getMessage()));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            sendJson(exchange, 500, Map.of("error", "Database error: " + e.getMessage()));
         } catch (Exception e) {
             e.printStackTrace();
             sendJson(exchange, 500, Map.of("error", "Internal server error"));
