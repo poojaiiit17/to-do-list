@@ -1,45 +1,82 @@
-# To-Do List Application
+# To-Do List - Java + JavaScript + MySQL
 
-A beginner-friendly full-stack To-Do List project using **Java backend** and **HTML/CSS/JavaScript frontend**.
+A beginner-friendly full-stack To-Do List application.
+
+## Technologies
+
+- Frontend: HTML, CSS, JavaScript
+- Backend: Java 17
+- API: Java built-in `HttpServer`
+- Database: MySQL
+- Database access: JDBC
+- Build tool: Maven
+- JSON: Gson
+
+## Architecture
+
+```text
+Browser
+   |
+   | HTTP / JSON
+   v
+Java HTTP Server :8080
+   |
+   v
+TaskService
+   |
+   v
+TaskDAO
+   |
+   | JDBC
+   v
+MySQL: todo_db.tasks
+```
 
 ## Features
 
-- Add a task
-- View all tasks
-- Edit a task
-- Mark a task as completed
+- Add task
+- View tasks
+- Edit task
+- Delete task
+- Mark task completed
 - Undo completed task
-- Delete a task
-- Filter All / Pending / Completed
-- REST API communication using JavaScript `fetch()`
-- Responsive frontend
+- Filter all/pending/completed tasks
+- Data persists in MySQL
 
-## Project Structure
+## 1. Create the database
+
+Open MySQL and run the complete file:
+
+`database/todo_db.sql`
+
+It creates the `todo_db` database and `tasks` table and inserts sample records.
+
+## 2. Configure MySQL password
+
+The backend uses these environment variables:
 
 ```text
-to-do-list/
-├── backend/
-│   ├── pom.xml
-│   └── src/main/java/com/pooja/todo/
-│       ├── Main.java
-│       ├── Task.java
-│       └── TaskService.java
-├── frontend/
-│   ├── index.html
-│   ├── style.css
-│   └── script.js
-└── README.md
+TODO_DB_USER
+TODO_DB_PASSWORD
 ```
 
-## Requirements
+If they are not set, the defaults are:
 
-- Java 17 or later
-- Maven
-- A web browser
+```text
+user = root
+password = root
+```
 
-## Run the backend
+For Ubuntu/Linux, for example:
 
-Open a terminal inside the `backend` folder:
+```bash
+export TODO_DB_USER=root
+export TODO_DB_PASSWORD=your_mysql_password
+```
+
+Do not commit real passwords to GitHub.
+
+## 3. Start the Java backend
 
 ```bash
 cd backend
@@ -47,30 +84,20 @@ mvn clean compile
 mvn exec:java
 ```
 
-The backend starts at:
+The server starts at `http://localhost:8080`.
 
-```text
-http://localhost:8080
-```
+## 4. Start the frontend
 
-## Run the frontend
-
-Open `frontend/index.html` in a browser after starting the backend.
-
-For the best browser experience, you can also serve the frontend with a simple local server:
+For best results, serve the frontend with a local server:
 
 ```bash
 cd frontend
 python3 -m http.server 5500
 ```
 
-Then open:
+Then open `http://localhost:5500` in the browser.
 
-```text
-http://localhost:5500
-```
-
-## API Endpoints
+## API endpoints
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -80,15 +107,31 @@ http://localhost:5500
 | PATCH | `/api/tasks/{id}` | Toggle completed status |
 | DELETE | `/api/tasks/{id}` | Delete a task |
 
-## How it works
+## Database table
 
-1. The user enters a task in the browser.
-2. `script.js` sends the task to the Java backend using `fetch()`.
-3. `Main.java` receives the HTTP request.
-4. `TaskService` performs the task operation.
-5. The Java backend returns JSON.
-6. JavaScript receives the response and updates the page.
+Only one table is required for the current application: `tasks`.
 
-## Important note
+Important columns:
 
-This beginner version stores tasks in Java memory, so tasks are lost when the backend is stopped. A future version can add MySQL persistence using DAO classes.
+- `task_id` - primary key
+- `title` - task title
+- `description` - task details
+- `completed` - task status
+- `created_at` - creation time
+- `updated_at` - last update time
+
+## Request flow example
+
+When the user clicks **Add Task**:
+
+```text
+JavaScript
+   -> POST /api/tasks
+   -> Main.java
+   -> TaskService
+   -> TaskDAO
+   -> MySQL INSERT
+   -> TaskDAO reads generated task_id
+   -> Java returns JSON
+   -> JavaScript refreshes the task list
+```
